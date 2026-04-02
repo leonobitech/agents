@@ -5,6 +5,7 @@ import base64
 import json
 import os
 import weakref
+from collections import Counter
 from dataclasses import dataclass, replace
 from typing import Any, Literal, TypedDict, overload
 
@@ -662,12 +663,19 @@ class SpeechStream(stt.SpeechStream):
             start_event = stt.SpeechEvent(type=stt.SpeechEventType.START_OF_SPEECH)
             self._event_ch.send_nowait(start_event)
 
+        speaker: int | None = data.get("speaker")
+        if speaker is None and is_final and words:
+            word_speakers = [w["speaker"] for w in words if "speaker" in w]
+            if word_speakers:
+                speaker = Counter(word_speakers).most_common(1)[0][0]
+
         speech_data = stt.SpeechData(
             language=language,
             start_time=self.start_time_offset + data.get("start", 0),
             end_time=self.start_time_offset + data.get("start", 0) + data.get("duration", 0),
             confidence=data.get("confidence", 1.0),
             text=text,
+            speaker_id=f"S{speaker}" if speaker is not None else None,
             words=[
                 TimedString(
                     text=word.get("word", ""),
