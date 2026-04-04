@@ -678,7 +678,7 @@ class SpeechStream(stt.SpeechStream):
                     end_time=word.get("end", 0) + self.start_time_offset,
                     start_time_offset=self.start_time_offset,
                     confidence=word.get("confidence", 0.0),
-                    speaker_id=word.get("speaker_id"),
+                    speaker_id=str(word.get("speaker_id")) if word.get("speaker_id") is not None else None,
                 )
                 for word in words
             ],
